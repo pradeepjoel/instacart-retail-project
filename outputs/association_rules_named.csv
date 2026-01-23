@@ -1,0 +1,21 @@
+antecedent,consequent,pair_count,support,confidence,lift
+Almond Milk Blueberry Yogurt,Almond Milk Strawberry Yogurt,2762,0.0010416670595232392,0.571961068544212,260.1313277024495
+Organic Whole Milk Strawberry Beet Berry Yogurt Pouch,Yotoddler Organic Pear Spinach Mango Yogurt,2875,0.0010842841405247332,0.4447710396039604,191.1995561218634
+Blueberry on the Bottom Nonfat Greek Yogurt,Strawberry on the Bottom Nonfat Greek Yogurt,2847,0.0010737241558517966,0.4373943770164388,149.26119705949174
+Peach on the Bottom Nonfat Greek Yogurt,Strawberry on the Bottom Nonfat Greek Yogurt,2751,0.0010375184941160142,0.34616836542091356,118.13024428732243
+Fat Free Blueberry Yogurt,Total 0% Raspberry Yogurt,2703,0.001019415663248123,0.3694641880809185,78.87611227988155
+Fat Free Strawberry Yogurt,Total 0% Raspberry Yogurt,3108,0.001172158298695955,0.3102105998602655,66.22619158863859
+Icelandic Style Skyr Blueberry Non-fat Yogurt,Non Fat Raspberry Yogurt,7413,0.002795755942159947,0.3755128919507624,59.37620417153042
+Non Fat Acai & Mixed Berries Yogurt,Non Fat Raspberry Yogurt,3257,0.0012283525028483674,0.3646848057328407,57.66406413095211
+Nonfat Icelandic Style Strawberry Yogurt,Vanilla Skyr Nonfat Yogurt,3972,0.0014980092543179966,0.3644371043214974,51.863026321030084
+Icelandic Style Skyr Blueberry Non-fat Yogurt,Vanilla Skyr Nonfat Yogurt,6803,0.0025656991332138296,0.3446127349171774,49.04182128997743
+Non Fat Raspberry Yogurt,Vanilla Skyr Nonfat Yogurt,5212,0.0019656657184051857,0.31081161667362395,44.231585821749185
+Total 2% Lowfat Greek Strained Yogurt With Blueberry,Total 2% Lowfat Greek Strained Yogurt with Peach,6439,0.0024284193324656546,0.3039988669090222,39.6136608800739
+Total 2% Lowfat Greek Strained Yogurt With Blueberry,Total 2% with Strawberry Lowfat Greek Strained Yogurt,9524,0.003591903358037412,0.4496482696756527,39.10045029391699
+Total 2% Lowfat Greek Strained Yogurt with Peach,Total 2% with Strawberry Lowfat Greek Strained Yogurt,8205,0.0030944526514801516,0.4032337330450167,35.0643416177945
+Apples,Clementines,3898,0.0014701007233966644,0.3505080478374247,33.88183552657093
+Sparkling Water Berry,Sparkling Water Grapefruit,6194,0.0023360194665774598,0.35029973984843343,12.152959856376961
+Peach Pear Flavored Sparkling Water,Sparkling Water Grapefruit,6894,0.0026000190834008733,0.32065116279069766,11.12436084303695
+Organic Yellow Squash,Organic Zucchini,5143,0.0019396428990325922,0.44826985095441474,11.017352220281031
+Organic Nectarine,Organic Strawberries,4614,0.0017401346171760413,0.35383435582822087,3.5014854552322263
+Asparation/Broccolini/Baby Broccoli,Banana,6269,0.00236430513980854,0.3743580556550818,2.0984550378575815

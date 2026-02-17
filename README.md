@@ -120,7 +120,6 @@ Responsibilities include:
 The data engineering scope includes:
 - Data ingestion and validation
 - Data modeling
-- Transaction construction
 - Performance-aware processing
 - Reproducible notebook pipeline
 - Clean GitHub repository without large datasets

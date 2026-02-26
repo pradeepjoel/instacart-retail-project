@@ -19,7 +19,7 @@ def plot_heatmap(series,title):
 def plot_line_chart(index, values, title=None, xlabel=None, ylabel=None):
     plt.figure()
     plt.plot(index, values)
-    plt.title(t)
-    plt.xlabel(x)
-    plt.ylabel(y)
+    plt.title(title)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
     plt.show()

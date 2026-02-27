@@ -20,7 +20,7 @@ OUTPUT_DIR = PROJECT_ROOT / "outputs"
 @st.cache_data(show_spinner=False)
 def load_data():
     dim_products = pd.read_parquet(PROCESSED_DIR / "dim_products.parquet")
-    fact = pd.read_parquet(PROCESSED_DIR / "fact_order_items.parquet")
+    fact = pd.read_parquet(PROCESSED_DIR / "fact_order_items_slim.parquet")
     rules = pd.read_parquet(OUTPUT_DIR / "rules_fpgrowth.parquet")
     prices = pd.read_parquet(PROCESSED_DIR / "product_prices.parquet")
     return dim_products, fact, rules, prices

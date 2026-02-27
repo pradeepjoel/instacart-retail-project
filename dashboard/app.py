@@ -103,7 +103,7 @@ with tab_overview:
             how="left",
         )
     )
-    st.dataframe(top_products, use_container_width=True)
+    st.dataframe(top_products, width="stretch")
 
     chart_prod = (
         alt.Chart(top_products)
@@ -115,7 +115,7 @@ with tab_overview:
         )
         .properties(height=380)
     )
-    st.altair_chart(chart_prod, use_container_width=True)
+    st.altair_chart(chart_prod, width="stretch")
 
     st.subheader("Top Departments by Volume")
     dept_counts = (
@@ -136,7 +136,7 @@ with tab_overview:
         )
         .properties(height=360)
     )
-    st.altair_chart(chart_dept, use_container_width=True)
+    st.altair_chart(chart_dept, width="stretch")
 
 # ==========================================================
 # Tab 2: Rules Explorer
@@ -164,7 +164,7 @@ with tab_rules:
     show_k = st.number_input("Show top K rules", min_value=10, max_value=500, value=50, step=10)
 
     view_cols = ["antecedent_names", "consequent_names", "support", "confidence", "lift"]
-    st.dataframe(filtered[view_cols].head(int(show_k)), use_container_width=True)
+    st.dataframe(filtered[view_cols].head(int(show_k)), width="stretch")
 
     csv = filtered[view_cols].to_csv(index=False).encode("utf-8")
     st.download_button("Download filtered rules (CSV)", data=csv, file_name="filtered_rules.csv", mime="text/csv")
@@ -209,7 +209,7 @@ with tab_viz:
         .properties(height=420)
         .interactive()
     )
-    st.altair_chart(scatter, use_container_width=True)
+    st.altair_chart(scatter, width="stretch")
 
 # ==========================================================
 # Tab 4: Segmentation & Revenue Impact
@@ -315,7 +315,7 @@ with tab_seg:
             )
             .properties(height=260)
         )
-        st.altair_chart(chart_seg1, use_container_width=True)
+        st.altair_chart(chart_seg1, width="stretch")
 
     with c2:
         st.caption("Spend Segment Distribution")
@@ -335,4 +335,4 @@ with tab_seg:
             )
             .properties(height=260)
         )
-        st.altair_chart(chart_seg2, use_container_width=True)
+        st.altair_chart(chart_seg2, width="stretch")

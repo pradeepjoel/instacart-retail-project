@@ -1,5 +1,4 @@
 # Retail Analytics & Pattern Mining Dashboard (Single-file, no src imports)
-
 from pathlib import Path
 import pandas as pd
 import streamlit as st
@@ -17,14 +16,6 @@ OUTPUT_DIR = PROJECT_ROOT / "outputs"
 # ---------------------------
 # Helpers
 # ---------------------------
-@st.cache_data(show_spinner=False)
-def load_data():
-    dim_products = pd.read_parquet(PROCESSED_DIR / "dim_products.parquet")
-    fact = pd.read_parquet(PROCESSED_DIR / "fact_order_items_slim.parquet")
-    rules = pd.read_parquet(OUTPUT_DIR / "rules_fpgrowth.parquet")
-    prices = pd.read_parquet(PROCESSED_DIR / "product_prices.parquet")
-    return dim_products, fact, rules, prices
-
 def parse_id_list(s):
     # "24852" or "24799,36865"
     if pd.isna(s) or str(s).strip() == "":
@@ -36,10 +27,83 @@ def ids_to_names(ids, id_to_name):
         return ""
     return " + ".join([id_to_name.get(i, f"id_{i}") for i in ids])
 
+@st.cache_data(show_spinner=False)
+def load_data():
+    dim_products = pd.read_parquet(PROCESSED_DIR / "dim_products.parquet")
+    fact = pd.read_parquet(PROCESSED_DIR / "fact_order_items_slim.parquet")
+    rules = pd.read_parquet(OUTPUT_DIR / "rules_fpgrowth.parquet")
+    prices = pd.read_parquet(PROCESSED_DIR / "product_prices.parquet")
+    return dim_products, fact, rules, prices
+
+@st.cache_data(show_spinner=False)
+def compute_top_products(fact_df, dim_products_df, top_n: int):
+    top_products = (
+        fact_df["product_id"]
+        .value_counts()
+        .head(int(top_n))
+        .rename_axis("product_id")
+        .reset_index(name="order_item_count")
+        .merge(
+            dim_products_df[["product_id", "product_name", "department"]],
+            on="product_id",
+            how="left",
+        )
+    )
+    return top_products
+
+@st.cache_data(show_spinner=False)
+def compute_dept_counts(fact_df, dim_products_df, top_n: int):
+    dept_counts = (
+        fact_df.merge(dim_products_df[["product_id", "department"]], on="product_id", how="left")
+        .groupby("department", as_index=False)
+        .size()
+        .sort_values("size", ascending=False)
+        .head(int(top_n))
+    )
+    return dept_counts
+
+@st.cache_data(show_spinner=False)
+def compute_filtered_rules(rules_df, min_support: float, min_conf: float, min_lift: float):
+    filtered = rules_df[
+        (rules_df["support"] >= min_support)
+        & (rules_df["confidence"] >= min_conf)
+        & (rules_df["lift"] >= min_lift)
+    ].copy()
+    filtered = filtered.sort_values(["lift", "confidence", "support"], ascending=False)
+    return filtered
+
+@st.cache_data(show_spinner=False)
+def compute_order_features(fact_df, prices_df):
+    # keep only needed columns (reduces memory)
+    f = fact_df[["order_id", "product_id"]]
+    p = prices_df[["product_id", "price"]]
+
+    order_features = (
+        f.merge(p, on="product_id", how="left")
+        .groupby("order_id", as_index=False)
+        .agg(
+            basket_size=("product_id", "count"),
+            total_spent=("price", "sum"),
+        )
+    )
+    return order_features
+
 # ---------------------------
 # Load
 # ---------------------------
 dim_products_df, fact_df, rules_df, prices_df = load_data()
+
+# Reduce RAM (important for Streamlit Cloud stability)
+# fact_df
+fact_df = fact_df[["order_id", "product_id", "reordered"]].copy()
+fact_df["order_id"] = fact_df["order_id"].astype("int32", copy=False)
+fact_df["product_id"] = fact_df["product_id"].astype("int32", copy=False)
+fact_df["reordered"] = fact_df["reordered"].astype("int8", copy=False)
+
+# prices_df
+prices_df = prices_df[["product_id", "price"]].copy()
+prices_df["product_id"] = prices_df["product_id"].astype("int32", copy=False)
+prices_df["price"] = prices_df["price"].astype("float32", copy=False)
 
 # Validate required columns (prevents silent crashes)
 req_fact = {"order_id", "product_id", "reordered"}
@@ -72,6 +136,11 @@ min_lift = st.sidebar.slider("Min Lift", 1.0, lift_hi, 1.5, 0.5)
 top_n_products = st.sidebar.selectbox("Top N products", [10, 20, 30, 50], index=0)
 top_n_depts = st.sidebar.selectbox("Top N departments", [10, 15, 20], index=1)
 
+# Stability toggle: segmentation is the heaviest. Make it on-demand.
+st.sidebar.divider()
+perf_mode = st.sidebar.toggle("Performance mode (recommended on Cloud)", value=True)
+st.sidebar.caption("If enabled, heavy segmentation runs only when you click a button.")
+
 tab_overview, tab_rules, tab_viz, tab_seg = st.tabs(
     ["Retail Overview", "Rules Explorer", "Rule Visuals", "Segmentation & Revenue Impact"]
 )
@@ -80,8 +149,8 @@ tab_overview, tab_rules, tab_viz, tab_seg = st.tabs(
 # Tab 1: Retail Overview
 # ==========================================================
 with tab_overview:
-    unique_orders = fact_df["order_id"].nunique()
-    unique_products = fact_df["product_id"].nunique()
+    unique_orders = int(fact_df["order_id"].nunique())
+    unique_products = int(fact_df["product_id"].nunique())
     reorder_rate = float(fact_df["reordered"].mean())
 
     c1, c2, c3, c4 = st.columns(4)
@@ -91,18 +160,7 @@ with tab_overview:
     c4.metric("Reorder Rate", f"{reorder_rate:.3f}")
 
     st.subheader("Top Products by Volume")
-    top_products = (
-        fact_df["product_id"]
-        .value_counts()
-        .head(int(top_n_products))
-        .rename_axis("product_id")
-        .reset_index(name="order_item_count")
-        .merge(
-            dim_products_df[["product_id", "product_name", "department"]],
-            on="product_id",
-            how="left",
-        )
-    )
+    top_products = compute_top_products(fact_df, dim_products_df, int(top_n_products))
     st.dataframe(top_products, width="stretch")
 
     chart_prod = (
@@ -118,13 +176,7 @@ with tab_overview:
     st.altair_chart(chart_prod, width="stretch")
 
     st.subheader("Top Departments by Volume")
-    dept_counts = (
-        fact_df.merge(dim_products_df[["product_id", "department"]], on="product_id", how="left")
-        .groupby("department", as_index=False)
-        .size()
-        .sort_values("size", ascending=False)
-        .head(int(top_n_depts))
-    )
+    dept_counts = compute_dept_counts(fact_df, dim_products_df, int(top_n_depts))
 
     chart_dept = (
         alt.Chart(dept_counts)
@@ -144,30 +196,25 @@ with tab_overview:
 with tab_rules:
     st.subheader("Association Rules (FP-Growth)")
 
-    filtered = rules_df[
-        (rules_df["support"] >= min_support)
-        & (rules_df["confidence"] >= min_conf)
-        & (rules_df["lift"] >= min_lift)
-    ].copy()
-
-    filtered = filtered.sort_values(["lift", "confidence", "support"], ascending=False)
-
-    filtered["antecedent_names"] = filtered["antecedents_str"].apply(
-        lambda x: ids_to_names(parse_id_list(x), id_to_name)
-    )
-    filtered["consequent_names"] = filtered["consequents_str"].apply(
-        lambda x: ids_to_names(parse_id_list(x), id_to_name)
-    )
-
+    filtered = compute_filtered_rules(rules_df, float(min_support), float(min_conf), float(min_lift))
     st.write(f"Filtered rules: {len(filtered):,}")
 
     show_k = st.number_input("Show top K rules", min_value=10, max_value=500, value=50, step=10)
 
-    view_cols = ["antecedent_names", "consequent_names", "support", "confidence", "lift"]
-    st.dataframe(filtered[view_cols].head(int(show_k)), width="stretch")
+    # Only compute readable names for the rows we display (faster)
+    show_df = filtered.head(int(show_k)).copy()
+    show_df["antecedent_names"] = show_df["antecedents_str"].apply(
+        lambda x: ids_to_names(parse_id_list(x), id_to_name)
+    )
+    show_df["consequent_names"] = show_df["consequents_str"].apply(
+        lambda x: ids_to_names(parse_id_list(x), id_to_name)
+    )
 
-    csv = filtered[view_cols].to_csv(index=False).encode("utf-8")
-    st.download_button("Download filtered rules (CSV)", data=csv, file_name="filtered_rules.csv", mime="text/csv")
+    view_cols = ["antecedent_names", "consequent_names", "support", "confidence", "lift"]
+    st.dataframe(show_df[view_cols], width="stretch")
+
+    csv = show_df[view_cols].to_csv(index=False).encode("utf-8")
+    st.download_button("Download shown rules (CSV)", data=csv, file_name="filtered_rules_topk.csv", mime="text/csv")
 
 # ==========================================================
 # Tab 3: Rule Visuals
@@ -175,11 +222,7 @@ with tab_rules:
 with tab_viz:
     st.subheader("Rule Scatter Plot")
 
-    filtered_v = rules_df[
-        (rules_df["support"] >= min_support)
-        & (rules_df["confidence"] >= min_conf)
-        & (rules_df["lift"] >= min_lift)
-    ].copy()
+    filtered_v = compute_filtered_rules(rules_df, float(min_support), float(min_conf), float(min_lift))
 
     if filtered_v.empty:
         st.info("No rules match the current thresholds. Reduce Min Support/Confidence/Lift.")
@@ -187,7 +230,9 @@ with tab_viz:
 
     max_points = 2000
     if len(filtered_v) > max_points:
-        filtered_v = filtered_v.head(max_points)
+        filtered_v = filtered_v.head(max_points).copy()
+    else:
+        filtered_v = filtered_v.copy()
 
     filtered_v["A_name"] = filtered_v["antecedents_str"].apply(
         lambda x: ids_to_names(parse_id_list(x), id_to_name)
@@ -218,7 +263,6 @@ with tab_seg:
     st.subheader("Revenue Impact (Top Rules Simulation)")
     st.caption("Business idea: if we promote A → B (recommendations / bundles), confidence may increase, generating extra revenue.")
 
-    # Select a rule
     rules_sel = rules_df[["support", "confidence", "lift", "antecedents_str", "consequents_str"]].copy()
     rules_sel = rules_sel.sort_values(["lift", "confidence", "support"], ascending=False).head(500)
 
@@ -236,11 +280,10 @@ with tab_seg:
 
     chosen = rules_sel.loc[rules_sel["label"] == selected_label].iloc[0]
 
-    N = fact_df["order_id"].nunique()
+    N = int(fact_df["order_id"].nunique())
     support = float(chosen["support"])
     confidence = float(chosen["confidence"])
 
-    # Estimate support(A) ≈ support(A∩B) / confidence(A→B)
     support_A = support / confidence if confidence > 0 else 0.0
     orders_A = support_A * N
 
@@ -273,15 +316,16 @@ with tab_seg:
     st.divider()
     st.subheader("Customer Segmentation (Order-level)")
 
-    order_features = (
-        fact_df.merge(prices_df, on="product_id", how="left")
-        .assign(revenue=lambda d: d["price"])
-        .groupby("order_id", as_index=False)
-        .agg(
-            basket_size=("product_id", "count"),
-            total_spent=("revenue", "sum"),
-        )
-    )
+    if perf_mode:
+        run_seg = st.button("Run segmentation (compute now)", type="primary")
+    else:
+        run_seg = True
+
+    if not run_seg:
+        st.info("Segmentation is paused to keep the app stable on Streamlit Cloud. Click the button to compute it.")
+        st.stop()
+
+    order_features = compute_order_features(fact_df, prices_df)
 
     order_features["basket_segment"] = pd.cut(
         order_features["basket_size"],

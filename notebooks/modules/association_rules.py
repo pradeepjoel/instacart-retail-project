@@ -657,3 +657,146 @@ def enhance_transaction(
     }
 
     return filtered_df, stats
+
+# ============================================================
+# Association Rules: Improvements Pack
+# 1) Weighted recommender (confidence * lift)
+# 2) Lower min_support slightly
+# 3) Filter rules with lift > 1
+# 4) Keep multi-item antecedents (len >= 2)
+# 5) Evaluate again (hide part of basket, predict missing)
+# ============================================================
+
+# --- If you already have these from your module, keep using them ---
+# from association_rules import (
+#     build_transactions, transactions_to_onehot,
+#     run_apriori, run_fpgrowth, run_eclat, derive_rules_from_itemsets
+# )
+
+# ------------------------------------------------------------
+# A) Rule filtering utilities
+# ------------------------------------------------------------
+
+def filter_rules_for_prediction(
+    rules_df: pd.DataFrame,
+    min_lift: float = 1.0,
+    min_confidence: float = 0.2,
+    min_support: float = 0.0,
+    min_antecedent_len: int = 2,
+) -> pd.DataFrame:
+    """
+    Filter rules to improve predictive relevance.
+    """
+    if rules_df is None or rules_df.empty:
+        return rules_df
+
+    df = rules_df.copy()
+    df["ante_len"] = df["antecedents"].apply(len)
+
+    keep = (
+        (df["lift"] > min_lift) &
+        (df["confidence"] >= min_confidence) &
+        (df["support"] >= min_support) &
+        (df["ante_len"] >= min_antecedent_len)
+    )
+
+    return df.loc[keep].sort_values(["confidence", "lift"], ascending=False).reset_index(drop=True)
+
+
+# ------------------------------------------------------------
+# B) Weighted recommender
+# ------------------------------------------------------------
+
+def recommend_weighted_from_rules(
+    observed_items: set,
+    rules_df: pd.DataFrame,
+    k: int = 10,
+    score_mode: str = "conf_lift",
+) -> list:
+    """
+    Recommend items by aggregating scores from all matching rules.
+    score_mode:
+      - "conf_lift" = confidence * lift
+      - "conf"      = confidence
+      - "lift"      = lift
+    """
+    if rules_df is None or rules_df.empty or not observed_items:
+        return []
+
+    scores = {}
+    seen = set(observed_items)
+
+    for _, r in rules_df.iterrows():
+        ant = set(r["antecedents"])
+        if ant.issubset(observed_items):
+            if score_mode == "conf":
+                s = float(r["confidence"])
+            elif score_mode == "lift":
+                s = float(r["lift"])
+            else:
+                s = float(r["confidence"]) * float(r["lift"])
+
+            for c in r["consequents"]:
+                c = int(c)
+                if c not in seen:
+                    scores[c] = scores.get(c, 0.0) + s
+
+    ranked = sorted(scores.items(), key=lambda x: x[1], reverse=True)
+    return [pid for pid, _ in ranked[:k]]
+
+
+# ------------------------------------------------------------
+# C) Evaluation (proper: hide part of basket)
+# ------------------------------------------------------------
+
+def evaluate_weighted_recommender(
+    rules_df: pd.DataFrame,
+    test_transactions: pd.Series,  # order_id -> list(product_id)
+    k: int = 10,
+    hide_ratio: float = 0.5,
+    random_state: int = 42,
+    score_mode: str = "conf_lift",
+    max_orders: int | None = None,
+) -> dict:
+    """
+    Evaluate recommender by hiding a portion of each test basket.
+    - observed = remaining items
+    - hidden   = target items
+    Compute HitRate@K, Precision@K, Recall@K.
+    """
+    rng = np.random.default_rng(random_state)
+
+    hits_any = 0
+    precision_sum = 0.0
+    recall_sum = 0.0
+    n = 0
+
+    items_iter = list(test_transactions.items())
+    if max_orders is not None:
+        items_iter = items_iter[:max_orders]
+
+    for _, items in items_iter:
+        basket = list(map(int, items))
+        if len(basket) < 2:
+            continue
+
+        n_hide = max(1, int(len(basket) * hide_ratio))
+        hidden = set(rng.choice(basket, size=n_hide, replace=False))
+        observed = set(basket) - hidden
+
+        recs = recommend_weighted_from_rules(observed, rules_df, k=k, score_mode=score_mode)
+        hit_items = set(recs) & hidden
+
+        if hit_items:
+            hits_any += 1
+
+        precision_sum += len(hit_items) / k
+        recall_sum += len(hit_items) / len(hidden)
+        n += 1
+
+    return {
+        "HitRate@K": hits_any / n if n else 0.0,
+        "Precision@K": precision_sum / n if n else 0.0,
+        "Recall@K": recall_sum / n if n else 0.0,
+        "n_eval_orders": n
+    }

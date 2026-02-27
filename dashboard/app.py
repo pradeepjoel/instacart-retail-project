@@ -17,7 +17,6 @@ OUTPUT_DIR = PROJECT_ROOT / "outputs"
 # Helpers
 # ---------------------------
 def parse_id_list(s):
-    # "24852" or "24799,36865"
     if pd.isna(s) or str(s).strip() == "":
         return []
     return [int(x) for x in str(s).split(",") if x.strip().isdigit()]
@@ -37,7 +36,7 @@ def load_data():
 
 @st.cache_data(show_spinner=False)
 def compute_top_products(fact_df, dim_products_df, top_n: int):
-    top_products = (
+    return (
         fact_df["product_id"]
         .value_counts()
         .head(int(top_n))
@@ -49,18 +48,16 @@ def compute_top_products(fact_df, dim_products_df, top_n: int):
             how="left",
         )
     )
-    return top_products
 
 @st.cache_data(show_spinner=False)
 def compute_dept_counts(fact_df, dim_products_df, top_n: int):
-    dept_counts = (
+    return (
         fact_df.merge(dim_products_df[["product_id", "department"]], on="product_id", how="left")
         .groupby("department", as_index=False)
         .size()
         .sort_values("size", ascending=False)
         .head(int(top_n))
     )
-    return dept_counts
 
 @st.cache_data(show_spinner=False)
 def compute_filtered_rules(rules_df, min_support: float, min_conf: float, min_lift: float):
@@ -69,16 +66,13 @@ def compute_filtered_rules(rules_df, min_support: float, min_conf: float, min_li
         & (rules_df["confidence"] >= min_conf)
         & (rules_df["lift"] >= min_lift)
     ].copy()
-    filtered = filtered.sort_values(["lift", "confidence", "support"], ascending=False)
-    return filtered
+    return filtered.sort_values(["lift", "confidence", "support"], ascending=False)
 
 @st.cache_data(show_spinner=False)
 def compute_order_features(fact_df, prices_df):
-    # keep only needed columns (reduces memory)
     f = fact_df[["order_id", "product_id"]]
     p = prices_df[["product_id", "price"]]
-
-    order_features = (
+    return (
         f.merge(p, on="product_id", how="left")
         .groupby("order_id", as_index=False)
         .agg(
@@ -86,26 +80,23 @@ def compute_order_features(fact_df, prices_df):
             total_spent=("price", "sum"),
         )
     )
-    return order_features
 
 # ---------------------------
 # Load
 # ---------------------------
 dim_products_df, fact_df, rules_df, prices_df = load_data()
 
-# Reduce RAM (important for Streamlit Cloud stability)
-# fact_df
+# Reduce RAM (important on Streamlit Cloud)
 fact_df = fact_df[["order_id", "product_id", "reordered"]].copy()
 fact_df["order_id"] = fact_df["order_id"].astype("int32", copy=False)
 fact_df["product_id"] = fact_df["product_id"].astype("int32", copy=False)
 fact_df["reordered"] = fact_df["reordered"].astype("int8", copy=False)
 
-# prices_df
 prices_df = prices_df[["product_id", "price"]].copy()
 prices_df["product_id"] = prices_df["product_id"].astype("int32", copy=False)
 prices_df["price"] = prices_df["price"].astype("float32", copy=False)
 
-# Validate required columns (prevents silent crashes)
+# Validate required columns
 req_fact = {"order_id", "product_id", "reordered"}
 req_dim = {"product_id", "product_name", "department"}
 req_rules = {"antecedents_str", "consequents_str", "support", "confidence", "lift"}
@@ -126,9 +117,7 @@ id_to_name = dict(zip(dim_products_df["product_id"], dim_products_df["product_na
 st.title("Retail Analytics & Pattern Mining Dashboard")
 
 st.sidebar.header("Filters")
-min_support = st.sidebar.slider(
-    "Min Support", 0.0, float(max(0.01, rules_df["support"].max())), 0.002, 0.0005
-)
+min_support = st.sidebar.slider("Min Support", 0.0, float(max(0.01, rules_df["support"].max())), 0.002, 0.0005)
 min_conf = st.sidebar.slider("Min Confidence", 0.0, 1.0, 0.30, 0.05)
 lift_hi = float(max(2.0, rules_df["lift"].quantile(0.99)))
 min_lift = st.sidebar.slider("Min Lift", 1.0, lift_hi, 1.5, 0.5)
@@ -136,10 +125,9 @@ min_lift = st.sidebar.slider("Min Lift", 1.0, lift_hi, 1.5, 0.5)
 top_n_products = st.sidebar.selectbox("Top N products", [10, 20, 30, 50], index=0)
 top_n_depts = st.sidebar.selectbox("Top N departments", [10, 15, 20], index=1)
 
-# Stability toggle: segmentation is the heaviest. Make it on-demand.
 st.sidebar.divider()
-perf_mode = st.sidebar.toggle("Performance mode (recommended on Cloud)", value=True)
-st.sidebar.caption("If enabled, heavy segmentation runs only when you click a button.")
+perf_mode = st.sidebar.toggle("Performance mode (Cloud stable)", value=True)
+st.sidebar.caption("Segmentation runs only when you click the button (prevents crashes).")
 
 tab_overview, tab_rules, tab_viz, tab_seg = st.tabs(
     ["Retail Overview", "Rules Explorer", "Rule Visuals", "Segmentation & Revenue Impact"]
@@ -161,7 +149,7 @@ with tab_overview:
 
     st.subheader("Top Products by Volume")
     top_products = compute_top_products(fact_df, dim_products_df, int(top_n_products))
-    st.dataframe(top_products, width="stretch")
+    st.dataframe(top_products, use_container_width=True)
 
     chart_prod = (
         alt.Chart(top_products)
@@ -173,7 +161,7 @@ with tab_overview:
         )
         .properties(height=380)
     )
-    st.altair_chart(chart_prod, width="stretch")
+    st.altair_chart(chart_prod, use_container_width=True)
 
     st.subheader("Top Departments by Volume")
     dept_counts = compute_dept_counts(fact_df, dim_products_df, int(top_n_depts))
@@ -188,7 +176,7 @@ with tab_overview:
         )
         .properties(height=360)
     )
-    st.altair_chart(chart_dept, width="stretch")
+    st.altair_chart(chart_dept, use_container_width=True)
 
 # ==========================================================
 # Tab 2: Rules Explorer
@@ -201,17 +189,12 @@ with tab_rules:
 
     show_k = st.number_input("Show top K rules", min_value=10, max_value=500, value=50, step=10)
 
-    # Only compute readable names for the rows we display (faster)
     show_df = filtered.head(int(show_k)).copy()
-    show_df["antecedent_names"] = show_df["antecedents_str"].apply(
-        lambda x: ids_to_names(parse_id_list(x), id_to_name)
-    )
-    show_df["consequent_names"] = show_df["consequents_str"].apply(
-        lambda x: ids_to_names(parse_id_list(x), id_to_name)
-    )
+    show_df["antecedent_names"] = show_df["antecedents_str"].apply(lambda x: ids_to_names(parse_id_list(x), id_to_name))
+    show_df["consequent_names"] = show_df["consequents_str"].apply(lambda x: ids_to_names(parse_id_list(x), id_to_name))
 
     view_cols = ["antecedent_names", "consequent_names", "support", "confidence", "lift"]
-    st.dataframe(show_df[view_cols], width="stretch")
+    st.dataframe(show_df[view_cols], use_container_width=True)
 
     csv = show_df[view_cols].to_csv(index=False).encode("utf-8")
     st.download_button("Download shown rules (CSV)", data=csv, file_name="filtered_rules_topk.csv", mime="text/csv")
@@ -223,45 +206,36 @@ with tab_viz:
     st.subheader("Rule Scatter Plot")
 
     filtered_v = compute_filtered_rules(rules_df, float(min_support), float(min_conf), float(min_lift))
-
     if filtered_v.empty:
         st.info("No rules match the current thresholds. Reduce Min Support/Confidence/Lift.")
-        st.stop()
-
-    max_points = 2000
-    if len(filtered_v) > max_points:
-        filtered_v = filtered_v.head(max_points).copy()
     else:
-        filtered_v = filtered_v.copy()
+        max_points = 2000
+        filtered_v = filtered_v.head(max_points).copy()
 
-    filtered_v["A_name"] = filtered_v["antecedents_str"].apply(
-        lambda x: ids_to_names(parse_id_list(x), id_to_name)
-    )
-    filtered_v["B_name"] = filtered_v["consequents_str"].apply(
-        lambda x: ids_to_names(parse_id_list(x), id_to_name)
-    )
-    filtered_v["rule"] = filtered_v["A_name"] + "  →  " + filtered_v["B_name"]
+        filtered_v["A_name"] = filtered_v["antecedents_str"].apply(lambda x: ids_to_names(parse_id_list(x), id_to_name))
+        filtered_v["B_name"] = filtered_v["consequents_str"].apply(lambda x: ids_to_names(parse_id_list(x), id_to_name))
+        filtered_v["rule"] = filtered_v["A_name"] + "  →  " + filtered_v["B_name"]
 
-    scatter = (
-        alt.Chart(filtered_v)
-        .mark_circle(size=80)
-        .encode(
-            x=alt.X("support:Q", title="Support"),
-            y=alt.Y("lift:Q", title="Lift"),
-            color=alt.Color("confidence:Q", title="Confidence"),
-            tooltip=["rule", "support", "confidence", "lift"],
+        scatter = (
+            alt.Chart(filtered_v)
+            .mark_circle(size=80)
+            .encode(
+                x=alt.X("support:Q", title="Support"),
+                y=alt.Y("lift:Q", title="Lift"),
+                color=alt.Color("confidence:Q", title="Confidence"),
+                tooltip=["rule", "support", "confidence", "lift"],
+            )
+            .properties(height=420)
+            .interactive()
         )
-        .properties(height=420)
-        .interactive()
-    )
-    st.altair_chart(scatter, width="stretch")
+        st.altair_chart(scatter, use_container_width=True)
 
 # ==========================================================
 # Tab 4: Segmentation & Revenue Impact
 # ==========================================================
 with tab_seg:
     st.subheader("Revenue Impact (Top Rules Simulation)")
-    st.caption("Business idea: if we promote A → B (recommendations / bundles), confidence may increase, generating extra revenue.")
+    st.caption("Business idea: promote A → B (recommendations / bundles) and increase confidence to estimate incremental revenue.")
 
     rules_sel = rules_df[["support", "confidence", "lift", "antecedents_str", "consequents_str"]].copy()
     rules_sel = rules_sel.sort_values(["lift", "confidence", "support"], ascending=False).head(500)
@@ -308,75 +282,70 @@ with tab_seg:
     k3.metric("Additional purchases of B", f"{int(additional_orders):,}")
     k4.metric("Estimated incremental revenue (€)", f"{additional_revenue:,.2f}")
 
-    st.caption(
-        "Note: This is an approximation (especially for multi-item antecedents). "
-        "It’s useful to explain business impact in viva."
-    )
+    st.caption("Note: support(A) estimated from support(A∩B)/confidence. Approximation is fine for business interpretation.")
 
     st.divider()
     st.subheader("Customer Segmentation (Order-level)")
 
+    run_seg = True
     if perf_mode:
         run_seg = st.button("Run segmentation (compute now)", type="primary")
-    else:
-        run_seg = True
 
     if not run_seg:
-        st.info("Segmentation is paused to keep the app stable on Streamlit Cloud. Click the button to compute it.")
-        st.stop()
+        st.info("Segmentation paused for stability. Click the button to compute.")
+    else:
+        order_features = compute_order_features(fact_df, prices_df)
 
-    order_features = compute_order_features(fact_df, prices_df)
-
-    order_features["basket_segment"] = pd.cut(
-        order_features["basket_size"],
-        bins=[0, 5, 15, 50, 200],
-        labels=["Small", "Medium", "Large", "Bulk"],
-    )
-
-    order_features["spend_segment"] = pd.qcut(
-        order_features["total_spent"],
-        q=3,
-        labels=["Budget", "Standard", "Premium"],
-    )
-
-    c1, c2 = st.columns(2)
-
-    with c1:
-        st.caption("Basket Segment Distribution")
-        basket_counts = (
-            order_features["basket_segment"]
-            .value_counts()
-            .rename_axis("segment")
-            .reset_index(name="count")
+        order_features["basket_segment"] = pd.cut(
+            order_features["basket_size"],
+            bins=[0, 5, 15, 50, 200],
+            labels=["Small", "Medium", "Large", "Bulk"],
         )
-        chart_seg1 = (
-            alt.Chart(basket_counts)
-            .mark_bar()
-            .encode(
-                x=alt.X("segment:N", title="Basket segment"),
-                y=alt.Y("count:Q", title="Orders"),
-                tooltip=["segment", "count"],
+
+        order_features["spend_segment"] = pd.qcut(
+            order_features["total_spent"],
+            q=3,
+            labels=["Budget", "Standard", "Premium"],
+        )
+
+        c1, c2 = st.columns(2)
+
+        with c1:
+            st.caption("Basket Segment Distribution")
+            basket_counts = (
+                order_features["basket_segment"]
+                .value_counts()
+                .rename_axis("segment")
+                .reset_index(name="count")
             )
-            .properties(height=260)
-        )
-        st.altair_chart(chart_seg1, width="stretch")
-
-    with c2:
-        st.caption("Spend Segment Distribution")
-        spend_counts = (
-            order_features["spend_segment"]
-            .value_counts()
-            .rename_axis("segment")
-            .reset_index(name="count")
-        )
-        chart_seg2 = (
-            alt.Chart(spend_counts)
-            .mark_bar()
-            .encode(
-                x=alt.X("segment:N", title="Spend segment"),
-                y=alt.Y("count:Q", title="Orders"),
-                tooltip=["segment", "count"],
+            chart_seg1 = (
+                alt.Chart(basket_counts)
+                .mark_bar()
+                .encode(
+                    x=alt.X("segment:N", title="Basket segment"),
+                    y=alt.Y("count:Q", title="Orders"),
+                    tooltip=["segment", "count"],
+                )
+                .properties(height=260)
             )
-            .properties(height=260)
-        )
-        st.altair_chart(chart_seg2, width="stretch")
+            st.altair_chart(chart_seg1, use_container_width=True)
+
+        with c2:
+            st.caption("Spend Segment Distribution")
+            spend_counts = (
+                order_features["spend_segment"]
+                .value_counts()
+                .rename_axis("segment")
+                .reset_index(name="count")
+            )
+            chart_seg2 = (
+                alt.Chart(spend_counts)
+                .mark_bar()
+                .encode(
+                    x=alt.X("segment:N", title="Spend segment"),
+                    y=alt.Y("count:Q", title="Orders"),
+                    tooltip=["segment", "count"],
+                )
+                .properties(height=260)
+            )
+            st.altair_chart(chart_seg2, use_container_width=True)

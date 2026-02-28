@@ -66,18 +66,6 @@ https://www.notion.so/Instacart-Retail-End-to-End-Machine-Learning-Project-1f6f7
 
 ---
 
-## 📂 Repository Structure
-instacart-retail-project/
-│
-├── notebooks/ # End-to-end pipeline
-├── dashboard/ # Streamlit web application
-├── data/processed/ # Curated datasets
-├── outputs/ # Model & mining outputs
-└── requirements.txt
-
-
----
-
 ## ⚡ Run Locally
 
 ```bash
@@ -102,13 +90,9 @@ Instructor: Assan Sanogo
 💡 Outcome
 
 This system transforms raw retail data into actionable insights that help businesses:
-
 Increase revenue
-
 Reduce opportunity loss
-
 Optimize promotions
-
 Improve customer targeting
 
 

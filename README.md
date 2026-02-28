@@ -25,9 +25,6 @@ https://instacart-retail-project-7xzenqzeccvcqwfkoqqj4l.streamlit.app/
 📓 **Notebooks (Full Pipeline)**  
 https://github.com/pradeepjoel/instacart-retail-project/tree/main/notebooks
 
-📊 **Project Management (Notion)**  
-https://www.notion.so/Instacart-Retail-End-to-End-Machine-Learning-Project-1f6f7760095c4fff99ddb020dcf0bc4f
-
 ---
 
 ## 🧠 What This Project Covers

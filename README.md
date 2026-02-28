@@ -67,3 +67,48 @@ https://www.notion.so/Instacart-Retail-End-to-End-Machine-Learning-Project-1f6f7
 ---
 
 ## 📂 Repository Structure
+instacart-retail-project/
+│
+├── notebooks/ # End-to-end pipeline
+├── dashboard/ # Streamlit web application
+├── data/processed/ # Curated datasets
+├── outputs/ # Model & mining outputs
+└── requirements.txt
+
+
+---
+
+## ⚡ Run Locally
+
+```bash
+git clone https://github.com/pradeepjoel/instacart-retail-project.git
+cd instacart-retail-project
+pip install -r requirements.txt
+streamlit run dashboard/app.py
+
+👥 Team & Work Distribution
+Name	Contribution
+Pradeep Joel Xavier	Ingestion, Data Modeling, Web App
+Bharath Skyam	FP-Growth, Apriori, Feature Extraction, XGBoost
+Ibtissam Makodun	Association Rules
+Daria Klimova	Customer Segmentation, UP-Tree
+Firielle Dala	Dashboard
+Sandra Aloor Viju	Dashboard
+📌 Academic Context
+
+DSTI – Applied MSc Project
+Instructor: Assan Sanogo
+
+💡 Outcome
+
+This system transforms raw retail data into actionable insights that help businesses:
+
+Increase revenue
+
+Reduce opportunity loss
+
+Optimize promotions
+
+Improve customer targeting
+
+

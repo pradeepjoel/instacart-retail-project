@@ -800,3 +800,148 @@ def evaluate_weighted_recommender(
         "Recall@K": recall_sum / n if n else 0.0,
         "n_eval_orders": n
     }
+
+# ------------------------------------------------------------
+# D) Hybrid Model (Huge Improvement)
+# ------------------------------------------------------------
+
+def recommend_hybrid(
+    observed_items: set,
+    rules_df: pd.DataFrame,
+    global_popularity: list,
+    k: int = 10,
+    score_mode: str = "conf_lift"
+):
+    """
+    Hybrid recommender:
+    1) Use weighted rule-based recommendations
+    2) Fill remaining slots with popular items
+    """
+
+    # Step 1 — Rule-based scoring
+    scores = {}
+    seen = set(observed_items)
+
+    for _, r in rules_df.iterrows():
+        ant = set(r["antecedents"])
+        if ant.issubset(observed_items):
+
+            if score_mode == "conf":
+                s = float(r["confidence"])
+            elif score_mode == "lift":
+                s = float(r["lift"])
+            else:
+                s = float(r["confidence"]) * float(r["lift"])
+
+            for c in r["consequents"]:
+                c = int(c)
+                if c not in seen:
+                    scores[c] = scores.get(c, 0) + s
+
+    ranked_rules = sorted(scores.items(), key=lambda x: x[1], reverse=True)
+    recommendations = [pid for pid, _ in ranked_rules]
+
+    # Step 2 — Fill with global popularity
+    if len(recommendations) < k:
+        for item in global_popularity:
+            if item not in seen and item not in recommendations:
+                recommendations.append(item)
+            if len(recommendations) >= k:
+                break
+
+    return recommendations[:k]
+
+def evaluate_hybrid(
+    rules_df,
+    test_transactions,
+    global_popularity,
+    k=10,
+    hide_ratio=0.5,
+    random_state=42,
+    score_mode="conf_lift"
+):
+    import numpy as np
+    rng = np.random.default_rng(random_state)
+
+    hits_any = 0
+    precision_sum = 0
+    recall_sum = 0
+    n = 0
+
+    for _, items in test_transactions.items():
+        basket = list(map(int, items))
+        if len(basket) < 2:
+            continue
+
+        # Hide part of basket
+        n_hide = max(1, int(len(basket) * hide_ratio))
+        hidden = set(rng.choice(basket, size=n_hide, replace=False))
+        observed = set(basket) - hidden
+
+        recs = recommend_hybrid(
+            observed,
+            rules_df,
+            global_popularity,
+            k=k,
+            score_mode=score_mode
+        )
+
+        hit_items = set(recs) & hidden
+
+        if hit_items:
+            hits_any += 1
+
+        precision_sum += len(hit_items) / k
+        recall_sum += len(hit_items) / len(hidden)
+        n += 1
+
+    return {
+        "HitRate@K": hits_any / n if n else 0,
+        "Precision@K": precision_sum / n if n else 0,
+        "Recall@K": recall_sum / n if n else 0,
+        "n_eval_orders": n
+    }
+
+def evaluate_popularity_only(test_tx, global_popularity, k=10, hide_ratio=0.5, random_state=42):
+    import numpy as np
+    rng = np.random.default_rng(random_state)
+
+    hits = 0
+    precision_sum = 0
+    recall_sum = 0
+    n = 0
+
+    for _, items in test_tx.items():
+        basket = list(items)
+
+        if len(basket) < 2:
+            continue
+
+        # Hide part of basket
+        n_hide = max(1, int(len(basket) * hide_ratio))
+        hidden = set(rng.choice(basket, size=n_hide, replace=False))
+        observed = set(basket) - hidden
+
+        # Recommend top-K popular items not already observed
+        recs = []
+        for item in global_popularity:
+            if item not in observed:
+                recs.append(item)
+            if len(recs) >= k:
+                break
+
+        hit_items = set(recs) & hidden
+
+        if hit_items:
+            hits += 1
+
+        precision_sum += len(hit_items) / k
+        recall_sum += len(hit_items) / len(hidden)
+        n += 1
+
+    return {
+        "HitRate@K": hits / n if n else 0,
+        "Precision@K": precision_sum / n if n else 0,
+        "Recall@K": recall_sum / n if n else 0,
+        "n_eval_orders": n
+    }

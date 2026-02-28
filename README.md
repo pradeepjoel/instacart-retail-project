@@ -74,25 +74,8 @@ cd instacart-retail-project
 pip install -r requirements.txt
 streamlit run dashboard/app.py
 
-👥 Team & Work Distribution
-Name	Contribution
-Pradeep Joel Xavier	Ingestion, Data Modeling, Web App
-Bharath Skyam	FP-Growth, Apriori, Feature Extraction, XGBoost
-Ibtissam Makodun	Association Rules
-Daria Klimova	Customer Segmentation, UP-Tree
-Firielle Dala	Dashboard
-Sandra Aloor Viju	Dashboard
-📌 Academic Context
 
-DSTI – Applied MSc Project
-Instructor: Assan Sanogo
 
-💡 Outcome
 
-This system transforms raw retail data into actionable insights that help businesses:
-Increase revenue
-Reduce opportunity loss
-Optimize promotions
-Improve customer targeting
 
 

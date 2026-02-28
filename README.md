@@ -1,146 +1,162 @@
 <!-- =========================================================
-     Instacart Retail Project — README (HTML + inline CSS)
-     No external icons, no link-buttons
-     Copy-paste this entire file into README.md
-     ========================================================= -->
+README — Data-Driven Retail Insights for Cost Savings & Revenue Growth
+Repo: instacart-retail-project
+========================================================== -->
 
-<div align="center" style="
-  padding:24px 18px;
-  border-radius:18px;
-  background:linear-gradient(135deg,#06182c 0%, #0b3b7a 45%, #06182c 100%);
-  box-shadow:0 14px 40px rgba(0,0,0,.30);
-  border:1px solid rgba(255,255,255,.14);
-  overflow:hidden;
-  position:relative;
-">
+<div align="center">
 
-  <!-- soft animated highlights -->
-  <div style="
-    position:absolute; inset:-120px -120px auto auto;
-    width:280px; height:280px;
-    background:radial-gradient(circle at 30% 30%, rgba(120,200,255,.35), rgba(120,200,255,0) 62%);
-    filter:blur(6px);
-    animation:floatGlow 6.5s ease-in-out infinite;
-    pointer-events:none;
-  "></div>
+# 🛒 Data-Driven Retail Insights for Cost Savings & Revenue Growth  
+### Instacart Market Basket Analytics • Customer Segmentation • Utility-Aware Pattern Mining • Streamlit Dashboard
 
-  <div style="
-    position:absolute; inset:auto auto -140px -140px;
-    width:340px; height:340px;
-    background:radial-gradient(circle at 60% 60%, rgba(80,255,210,.18), rgba(80,255,210,0) 64%);
-    filter:blur(8px);
-    animation:floatGlow2 8s ease-in-out infinite;
-    pointer-events:none;
-  "></div>
+<p>
+  <img src="https://img.shields.io/badge/Python-3.10%2B-2ea44f?logo=python&logoColor=white" />
+  <img src="https://img.shields.io/badge/Streamlit-App-ff4b4b?logo=streamlit&logoColor=white" />
+  <img src="https://img.shields.io/badge/Pandas-Data%20Wrangling-1f77b4?logo=pandas&logoColor=white" />
+  <img src="https://img.shields.io/badge/ML-Association%20Rules-6f42c1" />
+  <img src="https://img.shields.io/badge/Dataset-Instacart%20(Kaggle)-0aa0ff" />
+  <img src="https://img.shields.io/badge/Status-Active-success" />
+</p>
 
-  <!-- animated "retail conveyor" line -->
-  <div style="
-    margin:0 auto 14px auto;
-    width:min(980px, 92%);
-    height:8px;
-    border-radius:999px;
-    background:rgba(255,255,255,.10);
-    border:1px solid rgba(255,255,255,.12);
-    overflow:hidden;
-  ">
-    <div style="
-      height:100%;
-      width:45%;
-      border-radius:999px;
-      background:linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.55), rgba(255,255,255,0));
-      animation:scan 2.2s linear infinite;
-    "></div>
-  </div>
+<!-- Optional: add your banner image if you have one -->
+<!-- <img src="docs/banner.png" width="900" /> -->
 
-  <h1 style="margin:0;color:#ffffff;letter-spacing:.2px;font-weight:850;">
-    Instacart Retail Analytics
-  </h1>
+---
 
-  <p style="margin:10px auto 0;color:rgba(255,255,255,.86);max-width:980px;line-height:1.55;">
-    End-to-end retail analytics on the Instacart Market Basket dataset: reproducible ingestion → star schema modeling → transaction baskets →
-    association rule mining (Apriori, FP-Growth, Eclat) and utility-aware mining (UP-Tree with a controlled pricing layer).
-  </p>
-
-  <!-- animated "basket tokens" -->
-  <div style="margin-top:16px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
-    <div style="padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.14);color:#fff;font-weight:650;">
-      Bronze
-      <span style="display:inline-block;margin-left:8px;width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.55);animation:pulse 1.8s ease-in-out infinite;"></span>
-    </div>
-    <div style="padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.14);color:#fff;font-weight:650;">
-      Silver
-      <span style="display:inline-block;margin-left:8px;width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.55);animation:pulse 1.8s ease-in-out infinite 0.35s;"></span>
-    </div>
-    <div style="padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.14);color:#fff;font-weight:650;">
-      Gold
-      <span style="display:inline-block;margin-left:8px;width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.55);animation:pulse 1.8s ease-in-out infinite 0.7s;"></span>
-    </div>
-    <div style="padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.14);color:#fff;font-weight:650;">
-      ARM + Utility
-      <span style="display:inline-block;margin-left:8px;width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.55);animation:pulse 1.8s ease-in-out infinite 1.05s;"></span>
-    </div>
-  </div>
-
-  <div style="
-    margin-top:16px;
-    padding:12px 14px;
-    border-radius:14px;
-    background:rgba(255,255,255,.08);
-    border:1px solid rgba(255,255,255,.12);
-    max-width:980px;
-    text-align:left;
-  ">
-    <div style="color:#ffffff;font-weight:750;margin-bottom:6px;">Academic objective (A25)</div>
-    <div style="color:rgba(255,255,255,.85);line-height:1.55;">
-      Discover product affinity patterns and translate them into business actions (bundling, cross-sell, promo strategy).
-      Deliver reproducible notebooks, shareable outputs for dashboards/reporting, and a clear viva narrative.
-    </div>
-  </div>
-
-  <!-- inline CSS animations -->
-  <style>
-    @keyframes scan { 
-      0% { transform: translateX(-120%); opacity: .35; }
-      25% { opacity: .75; }
-      50% { opacity: .95; }
-      100% { transform: translateX(260%); opacity: .35; }
-    }
-    @keyframes pulse {
-      0%,100% { transform: scale(1); opacity:.45; }
-      50% { transform: scale(1.55); opacity:.9; }
-    }
-    @keyframes floatGlow {
-      0%,100% { transform: translate(0,0); opacity:.85; }
-      50% { transform: translate(-18px, 14px); opacity:1; }
-    }
-    @keyframes floatGlow2 {
-      0%,100% { transform: translate(0,0); opacity:.75; }
-      50% { transform: translate(16px, -12px); opacity:.95; }
-    }
-  </style>
-</div>
+### 🎯 Core Business Question  
+**“How much money can I save or earn if I listen to these insights?”**  
+We answer this with **revenue simulations**, **bundle recommendations**, **customer segmentation**, and **promotion ROI guidance**.
 
 <br/>
 
-<div style="
-  padding:14px 14px;
-  border-radius:16px;
-  background:rgba(15,76,129,.10);
-  border:1px solid rgba(15,76,129,.22);
-">
-  <b>Included:</b> notebooks, code, lightweight outputs (CSV), docs, app scaffolding (if present).<br/>
-  <b>Not included:</b> Instacart raw dataset + large generated artifacts (keeps the repo clean and reproducible).
+<!-- =========================
+Animated Flow (pure SVG)
+========================= -->
+<svg width="920" height="130" viewBox="0 0 920 130" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Animated pipeline">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#00E5FF"/>
+      <stop offset="50%" stop-color="#7C4DFF"/>
+      <stop offset="100%" stop-color="#00E676"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000" flood-opacity="0.35"/>
+    </filter>
+    <style>
+      .card { fill: #0b1220; stroke: rgba(255,255,255,0.18); stroke-width: 1.2; rx: 18; filter:url(#shadow); }
+      .title { fill: #e6edf3; font: 700 14px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto; }
+      .sub { fill: rgba(230,237,243,0.72); font: 12px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto; }
+      .line { fill: none; stroke: url(#g); stroke-width: 3.5; stroke-linecap: round; stroke-dasharray: 10 10; animation: dash 2.2s linear infinite; }
+      .dot { fill: #00E5FF; opacity: 0.9; animation: pulse 1.2s ease-in-out infinite; }
+      @keyframes dash { to { stroke-dashoffset: -40; } }
+      @keyframes pulse { 0%,100%{ transform: translateY(0); opacity:0.55;} 50%{ transform: translateY(-2px); opacity:1;} }
+    </style>
+  </defs>
+
+  <!-- Cards -->
+  <rect class="card" x="30"  y="35" width="180" height="70" rx="18"/>
+  <rect class="card" x="250" y="35" width="190" height="70" rx="18"/>
+  <rect class="card" x="480" y="35" width="190" height="70" rx="18"/>
+  <rect class="card" x="710" y="35" width="180" height="70" rx="18"/>
+
+  <!-- Titles -->
+  <text class="title" x="55"  y="63">INGEST</text>
+  <text class="sub"   x="55"  y="84">Kaggle Instacart data</text>
+
+  <text class="title" x="275" y="63">TRANSFORM</text>
+  <text class="sub"   x="275" y="84">Bronze → Silver → Gold</text>
+
+  <text class="title" x="505" y="63">MINE & MODEL</text>
+  <text class="sub"   x="505" y="84">Apriori • FP-Growth • Eclat • UP-Tree</text>
+
+  <text class="title" x="735" y="63">DELIVER</text>
+  <text class="sub"   x="735" y="84">Streamlit dashboard + insights</text>
+
+  <!-- Lines -->
+  <path class="line" d="M210 70 C230 70, 230 70, 250 70"/>
+  <path class="line" d="M440 70 C460 70, 460 70, 480 70"/>
+  <path class="line" d="M670 70 C690 70, 690 70, 710 70"/>
+
+  <!-- Dots -->
+  <circle class="dot" cx="230" cy="70" r="4"/>
+  <circle class="dot" cx="460" cy="70" r="4"/>
+  <circle class="dot" cx="690" cy="70" r="4"/>
+</svg>
+
+<br/>
+
+<p>
+  <a href="YOUR_STREAMLIT_APP_URL"><b>🚀 Live App</b></a> •
+  <a href="YOUR_DEMO_VIDEO_URL"><b>🎥 Demo Video</b></a> •
+  <a href="#-quickstart"><b>⚡ Quickstart</b></a> •
+  <a href="#-team--work-distribution"><b>👥 Team</b></a>
+</p>
+
 </div>
 
 ---
 
-## Repository Structure
-```text
+## 📌 Overview
+This project uses the **Instacart Online Grocery Basket Analysis dataset** (3M+ orders, 200K+ customers) to generate **actionable retail insights** that help shop owners **save money and grow revenue** through smarter bundling, segmentation, and promotion strategies.  
+
+**Instructor:** Assan Sanogo  
+**Academic Context:** DSTI (Applied MSc tracks)  
+
+---
+
+## ✅ Objectives (What we deliver)
+From the project brief :contentReference[oaicite:1]{index=1}, our tool is designed to help shop owners:
+
+- **Boost sales** via **smart product bundling & upselling**
+- **Predict purchases** (next-basket / repeat purchase behavior)
+- **Segment customers** for targeted marketing (budget vs premium, frequent vs irregular)
+- **Design bundles that maximize revenue**
+- **Simulate revenue impact** (money saved/earned if insights are adopted)
+- **Measure promotion efficiency** (ROI of targeted vs untargeted discounts)
+
+---
+
+## 🧠 Methods
+### 1) Association Rule Mining (Market Basket)
+- **Apriori** (classic frequent itemsets)
+- **FP-Growth** (scalable frequent pattern mining)
+- **Eclat** (depth-first, efficient for certain sparsity patterns)
+- **UP-Tree (Utility Pattern Tree)**: goes beyond frequency by incorporating **utility/value**, enabling monetization-focused bundles :contentReference[oaicite:2]{index=2}
+
+### 2) Customer Segmentation
+- Basket size & variability
+- Shopping frequency (frequent/irregular)
+- Behavior clustering features engineered from orders/products
+
+### 3) Revenue / Savings Simulation
+- Compare current practices vs recommended bundles/promotions
+- Estimate uplift and opportunity cost using basket & pricing logic
+
+---
+
+## 🧱 Data Layers (Bronze → Silver → Gold)
+**Bronze (Raw):** source data (orders, products, aisles, departments)  
+**Silver (Clean):** joins, quality checks, typed columns, dedup, validated keys  
+**Gold (Business-ready):** star schema facts/dims, transactions table, ML features, mining inputs  
+
+> Optional enrichment (as suggested in the brief): integrate real pricing sources (e.g., Open Food Facts Prices) when available :contentReference[oaicite:3]{index=3}.
+
+---
+
+## 🗂️ Repository Structure
+```bash
 instacart-retail-project/
-├─ notebooks/                 # Main notebooks (run order below)
-├─ outputs/                   # Shareable CSV outputs (dashboard-ready)
-├─ dashboard/                 # Optional dashboard/app assets
-├─ data/                      # Local only (raw/processed) — not committed
-├─ docs/                      # Report + documentation
-├─ requirements.txt
-└─ README.md
+├─ dashboard/                 # Streamlit app
+├─ data/processed/            # curated parquet/csv outputs for app & models
+├─ notebooks/                 # end-to-end notebooks
+│  ├─ 01_ingestion_validation_new.ipynb
+│  ├─ 02_data_modeling_new.ipynb
+│  ├─ 03_build_transactions.ipynb
+│  ├─ 04_exploratory_data_analysis.ipynb
+│  ├─ 05-association_rules.ipynb
+│  ├─ 06_business_insights_from_association-rule-mining.ipynb
+│  ├─ 07_clients_segmentation.ipynb
+│  ├─ feature_extraction_XGBoost.ipynb
+│  └─ fp_gowth_apriori.ipynb
+├─ docs/                      # report / supporting docs
+├─ outputs/                   # charts, tables, intermediate exports
+└─ requirements.txt

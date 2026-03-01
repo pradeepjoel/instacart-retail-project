@@ -21,6 +21,8 @@ This project answers that using:
 
 🔗 **Web App**  
 https://instacart-retail-project-7xzenqzeccvcqwfkoqqj4l.streamlit.app/
+📊 **R Dashboard** 
+https://fidef.shinyapps.io/projet/
 
 📓 **Notebooks (Full Pipeline)**  
 https://github.com/pradeepjoel/instacart-retail-project/tree/main/notebooks
